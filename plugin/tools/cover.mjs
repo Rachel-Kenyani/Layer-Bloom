@@ -1,6 +1,6 @@
 // Renders the Figma Community cover (1920×960) to assets/cover.png. macOS only; run `npm run build` first.
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 
 const root = `${import.meta.dirname}/..`;
 const font = (file) => readFileSync(`${root}/../node_modules/@fontsource/${file}`).toString('base64');
@@ -77,8 +77,8 @@ const renames = [
 const reply = JSON.stringify({ content: [{ type: 'text', text: JSON.stringify({ renames }) }] });
 const inPlugin = `const w=document.querySelector('iframe').contentWindow;const m=(x)=>w.postMessage({pluginMessage:x},'*');`;
 
-if (!execFileSync('sh', ['-c', `[ -x ${root}/.cache/snap ] && echo yes || true`]).toString().trim()) {
-  execFileSync('swiftc', ['-O', `${root}/tools/snap.swift`, '-o', `${root}/.cache/snap`]);
+if (!existsSync(`${root}/.cache/snap`)) {
+  execFileSync('/usr/bin/swiftc', ['-O', `${root}/tools/snap.swift`, '-o', `${root}/.cache/snap`]);
 }
 execFileSync(`${root}/.cache/snap`, [
   `${root}/.cache/cover.html`,
@@ -88,5 +88,5 @@ execFileSync(`${root}/.cache/snap`, [
      m({type:'scan-result',layers:${JSON.stringify(layers)},skippedCount:0,limitReached:false});
      setTimeout(()=>[...w.document.querySelectorAll('.button-primary')].find((b)=>b.textContent.includes('Suggest')).click(),200); }`,
 ], { env: { ...process.env, SNAP_WIDTH: '1920', SNAP_HEIGHT: '960' } });
-execFileSync('cp', [`${root}/.cache/cover-0.png`, `${root}/assets/cover.png`]);
+copyFileSync(`${root}/.cache/cover-0.png`, `${root}/assets/cover.png`);
 console.log('Saved assets/cover.png');
