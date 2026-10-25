@@ -16,8 +16,8 @@
     "format": "prettier --write .",
     "screenshots": "sh plugin/tools/screenshots.sh",
     "icons": "sh plugin/tools/icons.sh",
-    "cover": "node plugin/tools/cover.mjs",
-    "verify": "yarn typecheck && yarn lint && yarn test"
+    "verify": "yarn typecheck && yarn lint && yarn test",
+    "listing": "node plugin/tools/cover.mjs && node plugin/tools/carousel.mjs"
   },
   "dependencies": {
     "@fontsource/inter": "^5.3.0",

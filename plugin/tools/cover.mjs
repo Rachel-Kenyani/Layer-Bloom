@@ -1,13 +1,6 @@
-// Renders the Figma Community cover (1920×960) to assets/cover.png. macOS only; run `yarn build` first.
-import { execFileSync } from 'node:child_process';
-import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-
-const root = `${import.meta.dirname}/..`;
-const font = (file) => readFileSync(`${root}/../node_modules/@fontsource/${file}`).toString('base64');
-const fontFace = (family, weight, file) =>
-  `@font-face{font-family:'${family}';font-weight:${weight};src:url(data:font/woff2;base64,${font(file)}) format('woff2')}`;
-const logo = readFileSync(`${root}/assets/logo.svg`, 'utf8');
-const plugin = readFileSync(`${root}/dist/ui.html`, 'utf8').replaceAll('&', '&amp;').replaceAll('"', '&quot;');
+// Renders the Figma Community cover (1920×960) and the first carousel slide (1920×1080). macOS only; run `yarn build` first.
+import { copyFileSync, mkdirSync } from 'node:fs';
+import { fakeClaude, fontFaces, inPlugin, logo, pluginFrame, root, snap, cache } from './page-kit.mjs';
 
 const before = ['Frame 54', 'Frame 100', 'Frame 117', 'Frame 108', '001 - Pixeledge', '001 - Pixeledge', '001 - Pixeledge', 'Frame 58'];
 const after = [
@@ -29,14 +22,12 @@ const rows = (names, highlight) =>
     )
     .join('');
 
-const page = `<!doctype html><html><head><meta charset="utf-8"><style>
-${fontFace('Montserrat', 700, 'montserrat/files/montserrat-latin-700-normal.woff2')}
-${fontFace('Montserrat', 600, 'montserrat/files/montserrat-latin-600-normal.woff2')}
-${fontFace('Inter', 400, 'inter/files/inter-latin-400-normal.woff2')}
-${fontFace('Inter', 600, 'inter/files/inter-latin-600-normal.woff2')}
+const page = (height) => `<!doctype html><html><head><meta charset="utf-8"><style>
+${fontFaces}
 *{box-sizing:border-box;margin:0}
-body{width:1920px;height:960px;overflow:hidden;font-family:Inter,sans-serif;color:#2e0d1b;
+body{width:1920px;height:${height}px;overflow:hidden;font-family:Inter,sans-serif;color:#2e0d1b;
   background:radial-gradient(circle at 85% 20%,#f8dbe8 0,transparent 45%),radial-gradient(circle at 70% 95%,#dff2e8 0,transparent 40%),#fdf9f8}
+.stage{position:absolute;left:0;top:${(height - 960) / 2}px;width:1920px;height:960px}
 .left{position:absolute;left:120px;top:0;bottom:0;width:640px;display:flex;flex-direction:column;justify-content:center;gap:28px}
 .logo svg{width:132px;height:132px;filter:drop-shadow(0 12px 28px rgba(107,15,53,.25))}
 h1{font-family:Montserrat;font-weight:700;font-size:104px;line-height:1;color:#6b0f35;letter-spacing:-2px}
@@ -58,7 +49,7 @@ h1{font-family:Montserrat;font-weight:700;font-size:104px;line-height:1;color:#6
 .window{position:absolute;right:90px;top:110px;width:380px;height:600px;transform:scale(1.25);transform-origin:top right;border-radius:14px;overflow:hidden;
   box-shadow:0 40px 80px rgba(46,13,27,.3);border:1px solid #eedde5;background:#fff}
 .window iframe{width:380px;height:600px;border:0}
-</style></head><body>
+</style></head><body><div class="stage">
 <div class="left">
   <div class="logo">${logo}</div>
   <h1>Layer Bloom</h1>
@@ -67,11 +58,8 @@ h1{font-family:Montserrat;font-weight:700;font-size:104px;line-height:1;color:#6
 </div>
 <div class="panel before"><h2>Before</h2><ul>${rows(before, false)}</ul></div>
 <div class="panel after"><h2>After</h2><ul>${rows(after, true)}</ul></div>
-<div class="window"><iframe srcdoc="${plugin}"></iframe></div>
-</body></html>`;
-
-mkdirSync(`${root}/.cache`, { recursive: true });
-writeFileSync(`${root}/.cache/cover.html`, page);
+<div class="window">${pluginFrame}</div>
+</div></body></html>`;
 
 const layers = [
   { id: '1', type: 'FRAME', name: 'Rachel Kenyani CV', depth: 0 },
@@ -88,23 +76,14 @@ const renames = [
   { id: '5', newName: 'Job Entry – Recess', reason: 'Recess role.' },
   { id: '6', newName: 'Role And Dates', reason: 'Title and dates.' },
 ];
-const reply = JSON.stringify({ content: [{ type: 'text', text: JSON.stringify({ renames }) }] });
-const inPlugin = `const w=document.querySelector('iframe').contentWindow;const m=(x)=>w.postMessage({pluginMessage:x},'*');`;
+const showReview = `{ ${inPlugin} ${fakeClaude(renames)}
+  m({type:'init',settings:{provider:'anthropic',apiKey:'sk-ant-xxxxxxxxxxxxxxxxxxxx7f2a'},preferences:{theme:'light',namingStyle:'title'},selectionCount:1});
+  m({type:'scan-result',layers:${JSON.stringify(layers)},skippedCount:0,limitReached:false});
+  setTimeout(()=>[...w.document.querySelectorAll('.button-primary')].find((b)=>b.textContent.includes('Suggest')).click(),200); }`;
 
-if (!existsSync(`${root}/.cache/snap`)) {
-  execFileSync('/usr/bin/swiftc', ['-O', `${root}/tools/snap.swift`, '-o', `${root}/.cache/snap`]);
-}
-execFileSync(
-  `${root}/.cache/snap`,
-  [
-    `${root}/.cache/cover.html`,
-    `${root}/.cache/cover`,
-    `{ ${inPlugin} w.fetch=async()=>new Response(${JSON.stringify(reply)},{status:200});
-     m({type:'init',settings:{provider:'anthropic',apiKey:'sk-ant-xxxxxxxxxxxxxxxxxxxx7f2a'},preferences:{theme:'light',namingStyle:'title'},selectionCount:1});
-     m({type:'scan-result',layers:${JSON.stringify(layers)},skippedCount:0,limitReached:false});
-     setTimeout(()=>[...w.document.querySelectorAll('.button-primary')].find((b)=>b.textContent.includes('Suggest')).click(),200); }`,
-  ],
-  { env: { ...process.env, SNAP_WIDTH: '1920', SNAP_HEIGHT: '960' } },
-);
-copyFileSync(`${root}/.cache/cover-0.png`, `${root}/assets/cover.png`);
-console.log('Saved assets/cover.png');
+mkdirSync(`${root}/assets/carousel`, { recursive: true });
+snap('cover', page(960), [showReview], 1920, 960);
+copyFileSync(`${cache}/cover-0.png`, `${root}/assets/cover.png`);
+snap('hero', page(1080), [showReview], 1920, 1080);
+copyFileSync(`${cache}/hero-0.png`, `${root}/assets/carousel/1-hero.png`);
+console.log('Saved assets/cover.png and assets/carousel/1-hero.png');
