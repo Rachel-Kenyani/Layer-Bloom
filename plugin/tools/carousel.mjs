@@ -1,6 +1,6 @@
 // Renders carousel slides 2–6 (1920×1080) to assets/carousel/. macOS only; run `yarn build` first.
 import { copyFileSync, mkdirSync } from 'node:fs';
-import { cache, fakeClaude, fontFaces, inPlugin, logo, pluginFrame, root, snap } from './page-kit.mjs';
+import { backdropCss, backdropHtml, cache, fakeClaude, fontFaces, inPlugin, logo, pluginFrame, root, snap } from './page-kit.mjs';
 
 const SLIDES = [
   {
@@ -67,8 +67,9 @@ const page = `<!doctype html><html><head><meta charset="utf-8"><style>
 ${fontFaces}
 *{box-sizing:border-box;margin:0}
 body{width:1920px;height:1080px;overflow:hidden;font-family:Inter,sans-serif;color:#2e0d1b;
-  background:radial-gradient(circle at 80% 15%,#f8dbe8 0,transparent 45%),radial-gradient(circle at 65% 100%,#dff2e8 0,transparent 40%),#fdf9f8}
-body.dark{color:#f5eef1;background:radial-gradient(circle at 80% 15%,#3a1426 0,transparent 45%),radial-gradient(circle at 65% 100%,#0c2a20 0,transparent 40%),#0a0a0a}
+}
+body.dark{color:#f5eef1}
+${backdropCss}
 .left{position:absolute;left:140px;top:0;bottom:0;width:820px;display:flex;flex-direction:column;justify-content:center;gap:28px}
 .brand{display:flex;align-items:center;gap:16px;font-family:Montserrat;font-weight:700;font-size:30px;color:#6b0f35}
 body.dark .brand{color:#e3a1c0}
@@ -82,7 +83,7 @@ body.dark p{color:#b9adb3}
   box-shadow:0 40px 80px rgba(46,13,27,.3);border:1px solid #eedde5;background:#fff}
 body.dark .window{border-color:#2c2c2c;box-shadow:0 40px 80px rgba(0,0,0,.6)}
 .window iframe{width:380px;height:600px;border:0}
-</style></head><body>
+</style></head><body>${backdropHtml}
 <div class="left">
   <div class="brand">${logo}Layer Bloom</div>
   <div class="eyebrow" id="eyebrow"></div>

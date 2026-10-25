@@ -1,6 +1,6 @@
 // Renders the Figma Community cover (1920×960) and the first carousel slide (1920×1080). macOS only; run `yarn build` first.
 import { copyFileSync, mkdirSync } from 'node:fs';
-import { fakeClaude, fontFaces, inPlugin, logo, pluginFrame, root, snap, cache } from './page-kit.mjs';
+import { backdropCss, backdropHtml, fakeClaude, fontFaces, inPlugin, logo, pluginFrame, root, snap, cache } from './page-kit.mjs';
 
 const before = ['Frame 54', 'Frame 100', 'Frame 117', 'Frame 108', '001 - Pixeledge', '001 - Pixeledge', '001 - Pixeledge', 'Frame 58'];
 const after = [
@@ -25,9 +25,9 @@ const rows = (names, highlight) =>
 const page = (height) => `<!doctype html><html><head><meta charset="utf-8"><style>
 ${fontFaces}
 *{box-sizing:border-box;margin:0}
-body{width:1920px;height:${height}px;overflow:hidden;font-family:Inter,sans-serif;color:#2e0d1b;
-  background:radial-gradient(circle at 85% 20%,#f8dbe8 0,transparent 45%),radial-gradient(circle at 70% 95%,#dff2e8 0,transparent 40%),#fdf9f8}
-.stage{position:absolute;left:0;top:${(height - 960) / 2}px;width:1920px;height:960px}
+${backdropCss}
+body{width:1920px;height:${height}px;overflow:hidden;font-family:Inter,sans-serif;color:#2e0d1b}
+.stage{z-index:1;position:absolute;left:0;top:${(height - 960) / 2}px;width:1920px;height:960px}
 .left{position:absolute;left:120px;top:0;bottom:0;width:640px;display:flex;flex-direction:column;justify-content:center;gap:28px}
 .logo svg{width:132px;height:132px;filter:drop-shadow(0 12px 28px rgba(107,15,53,.25))}
 h1{font-family:Montserrat;font-weight:700;font-size:104px;line-height:1;color:#6b0f35;letter-spacing:-2px}
@@ -49,7 +49,7 @@ h1{font-family:Montserrat;font-weight:700;font-size:104px;line-height:1;color:#6
 .window{position:absolute;right:90px;top:110px;width:380px;height:600px;transform:scale(1.25);transform-origin:top right;border-radius:14px;overflow:hidden;
   box-shadow:0 40px 80px rgba(46,13,27,.3);border:1px solid #eedde5;background:#fff}
 .window iframe{width:380px;height:600px;border:0}
-</style></head><body><div class="stage">
+</style></head><body>${backdropHtml}<div class="stage">
 <div class="left">
   <div class="logo">${logo}</div>
   <h1>Layer Bloom</h1>
