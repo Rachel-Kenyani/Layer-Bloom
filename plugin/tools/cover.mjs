@@ -1,4 +1,4 @@
-// Renders the Figma Community cover (1920×960) to assets/cover.png. macOS only; run `npm run build` first.
+// Renders the Figma Community cover (1920×960) to assets/cover.png. macOS only; run `yarn build` first.
 import { execFileSync } from 'node:child_process';
 import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 

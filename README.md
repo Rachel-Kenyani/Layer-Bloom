@@ -38,16 +38,17 @@ Locked and hidden layers are skipped. Up to 300 layers are scanned per run.
 
 ## Development
 
-Requires Node.js 24 and the Figma desktop app.
+Requires Node.js 24, Yarn 1 and the Figma desktop app.
 
 ```sh
-npm install
-npm run build        # type-check, then bundle to plugin/dist/
-npm run watch        # rebuild on save
-npm run check        # type-check, lint (ESLint + SonarJS rules) and tests
-npm run format       # Prettier
-npm run screenshots  # macOS: render every stage to plugin/screenshots/
-npm run icons        # macOS: render assets/logo.svg to PNG icons
+yarn install
+yarn build        # type-check, then bundle to plugin/dist/
+yarn watch        # rebuild on save
+yarn verify       # type-check, lint (ESLint + SonarJS rules) and tests
+yarn format       # Prettier
+yarn screenshots  # macOS: render every stage to plugin/screenshots/
+yarn icons        # macOS: render assets/logo.svg to PNG icons
+yarn cover        # macOS: render the Figma Community cover
 ```
 
 Load it in Figma: **Plugins → Development → Import plugin from manifest…** and choose `plugin/manifest.json`.
