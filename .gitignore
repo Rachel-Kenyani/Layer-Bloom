@@ -1,0 +1,8 @@
+node_modules/
+plugin/dist/
+.env
+.DS_Store
+BUILD_LOG.md
+plugin/screenshots/
+plugin/.cache/
+.vscode/
