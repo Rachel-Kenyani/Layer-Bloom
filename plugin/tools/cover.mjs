@@ -10,10 +10,24 @@ const logo = readFileSync(`${root}/assets/logo.svg`, 'utf8');
 const plugin = readFileSync(`${root}/dist/ui.html`, 'utf8').replaceAll('&', '&amp;').replaceAll('"', '&quot;');
 
 const before = ['Frame 54', 'Frame 100', 'Frame 117', 'Frame 108', '001 - Pixeledge', '001 - Pixeledge', '001 - Pixeledge', 'Frame 58'];
-const after = ['Resume Content', 'Summary Section', 'Main Content', 'Experience List', 'Job Entry – PixelEdge', 'Job Entry – Recess', 'Job Entry – Elimu Shop', 'Role And Dates'];
+const after = [
+  'Resume Content',
+  'Summary Section',
+  'Main Content',
+  'Experience List',
+  'Job Entry – PixelEdge',
+  'Job Entry – Recess',
+  'Job Entry – Elimu Shop',
+  'Role And Dates',
+];
 const depths = [0, 1, 1, 2, 3, 3, 3, 4];
 const rows = (names, highlight) =>
-  names.map((name, index) => `<li style="padding-left:${16 + depths[index] * 18}px" class="${highlight ? 'fresh' : ''}"><span class="hash">#</span>${name}</li>`).join('');
+  names
+    .map(
+      (name, index) =>
+        `<li style="padding-left:${16 + depths[index] * 18}px" class="${highlight ? 'fresh' : ''}"><span class="hash">#</span>${name}</li>`,
+    )
+    .join('');
 
 const page = `<!doctype html><html><head><meta charset="utf-8"><style>
 ${fontFace('Montserrat', 700, 'montserrat/files/montserrat-latin-700-normal.woff2')}
@@ -80,13 +94,17 @@ const inPlugin = `const w=document.querySelector('iframe').contentWindow;const m
 if (!existsSync(`${root}/.cache/snap`)) {
   execFileSync('/usr/bin/swiftc', ['-O', `${root}/tools/snap.swift`, '-o', `${root}/.cache/snap`]);
 }
-execFileSync(`${root}/.cache/snap`, [
-  `${root}/.cache/cover.html`,
-  `${root}/.cache/cover`,
-  `{ ${inPlugin} w.fetch=async()=>new Response(${JSON.stringify(reply)},{status:200});
+execFileSync(
+  `${root}/.cache/snap`,
+  [
+    `${root}/.cache/cover.html`,
+    `${root}/.cache/cover`,
+    `{ ${inPlugin} w.fetch=async()=>new Response(${JSON.stringify(reply)},{status:200});
      m({type:'init',settings:{provider:'anthropic',apiKey:'sk-ant-xxxxxxxxxxxxxxxxxxxx7f2a'},preferences:{theme:'light',namingStyle:'title'},selectionCount:1});
      m({type:'scan-result',layers:${JSON.stringify(layers)},skippedCount:0,limitReached:false});
      setTimeout(()=>[...w.document.querySelectorAll('.button-primary')].find((b)=>b.textContent.includes('Suggest')).click(),200); }`,
-], { env: { ...process.env, SNAP_WIDTH: '1920', SNAP_HEIGHT: '960' } });
+  ],
+  { env: { ...process.env, SNAP_WIDTH: '1920', SNAP_HEIGHT: '960' } },
+);
 copyFileSync(`${root}/.cache/cover-0.png`, `${root}/assets/cover.png`);
 console.log('Saved assets/cover.png');
