@@ -8,12 +8,31 @@ const LIGHT = { r: 0.97, g: 0.95, b: 0.96 };
 const WHITE = { r: 1, g: 1, b: 1 };
 const PINK = { r: 0.89, g: 0.63, b: 0.75 };
 const EMERALD = { r: 0.07, g: 0.58, b: 0.42 };
+const BLUSH = { r: 0.99, g: 0.93, b: 0.96 };
+const MINT = { r: 0.89, g: 0.96, b: 0.92 };
+const DEEP = { r: 0.17, g: 0.03, b: 0.09 };
 
 let counter = 1;
 const genericName = (type) => `${type} ${counter++}`;
 const solid = (color) => [{ type: 'SOLID', color }];
+const gradient = (from, to) => [
+  {
+    type: 'GRADIENT_LINEAR',
+    gradientTransform: [
+      [1, 0, 0],
+      [0, 1, 0],
+    ],
+    gradientStops: [
+      { position: 0, color: { ...from, a: 1 } },
+      { position: 1, color: { ...to, a: 1 } },
+    ],
+  },
+];
 
-function frame(children, { direction = 'VERTICAL', gap = 16, padding = 0, fill = null, radius = 0, width = null, align = 'MIN' } = {}) {
+function frame(
+  children,
+  { direction = 'VERTICAL', gap = 16, padding = 0, fill = null, fills = null, radius = 0, width = null, align = 'MIN' } = {},
+) {
   const node = figma.createFrame();
   node.name = genericName('Frame');
   node.layoutMode = direction;
@@ -25,7 +44,7 @@ function frame(children, { direction = 'VERTICAL', gap = 16, padding = 0, fill =
   if (width) {
     node.resize(width, 100);
   }
-  node.fills = fill ? solid(fill) : [];
+  node.fills = fills ?? (fill ? solid(fill) : []);
   node.cornerRadius = radius;
   for (const child of children) {
     node.appendChild(child);
@@ -33,7 +52,15 @@ function frame(children, { direction = 'VERTICAL', gap = 16, padding = 0, fill =
   return node;
 }
 
-function group(children) {
+/** Groups children laid out in a row. Positions are set before grouping, because a group takes its children's positions. */
+function group(children, gap = 0) {
+  let x = 0;
+  for (const child of children) {
+    figma.currentPage.appendChild(child);
+    child.x = x;
+    child.y = 0;
+    x += child.width + gap;
+  }
   const node = figma.group(children, figma.currentPage);
   node.name = genericName('Group');
   return node;
@@ -114,6 +141,33 @@ function testimonial(quote, person, role) {
   );
 }
 
+function taskCard(title, color) {
+  const avatars = frame([shape('ellipse', 20, 20, PINK), shape('ellipse', 20, 20, MINT)], { direction: 'HORIZONTAL', gap: 4 });
+  return frame([shape('rect', 36, 6, color, 3), text(title, { size: 14, weight: 'Semi Bold' }), avatars], {
+    padding: 14,
+    gap: 10,
+    fill: WHITE,
+    radius: 12,
+    width: 150,
+  });
+}
+
+function boardColumn(title, cards) {
+  return frame([text(title, { size: 13, weight: 'Semi Bold', color: MUTED }), ...cards], { gap: 10 });
+}
+
+/** A mock task board, so the hero has a real visual to name. */
+function heroBoard() {
+  return frame(
+    [
+      boardColumn('To do', [taskCard('Draft launch email', PINK), taskCard('Book venue', EMERALD)]),
+      boardColumn('In progress', [taskCard('Pricing page', BURGUNDY), taskCard('User interviews', PINK)]),
+      boardColumn('Done', [taskCard('Brand colours', EMERALD)]),
+    ],
+    { direction: 'HORIZONTAL', gap: 14, padding: 24, fills: gradient(BLUSH, MINT), radius: 24 },
+  );
+}
+
 function instructions() {
   const card = frame(
     [
@@ -135,8 +189,7 @@ function instructions() {
 async function build() {
   await Promise.all(['Regular', 'Semi Bold', 'Bold'].map((style) => figma.loadFontAsync({ family: 'Inter', style })));
 
-  const navLinks = group([text('Home'), text('Pricing'), text('About'), text('Blog')]);
-  navLinks.children.forEach((child, index) => (child.x = index * 90));
+  const navLinks = group([text('Home'), text('Pricing'), text('About'), text('Blog')], 36);
   const nav = frame(
     [
       frame([shape('rect', 32, 32, BURGUNDY, 8), text('Petalboard', { size: 22, weight: 'Bold' })], {
@@ -173,14 +226,14 @@ async function build() {
         ],
         { gap: 24 },
       ),
-      shape('rect', 560, 400, PINK, 24),
+      heroBoard(),
     ],
-    { direction: 'HORIZONTAL', gap: 80, align: 'CENTER' },
+    { direction: 'HORIZONTAL', gap: 64, align: 'CENTER', padding: 56, fills: gradient(BLUSH, WHITE), radius: 32 },
   );
 
   const logos = frame(
     ['Northwind', 'Acme', 'Globex', 'Initech', 'Umbrella'].map((name) => text(name, { size: 22, weight: 'Bold', color: MUTED })),
-    { direction: 'HORIZONTAL', gap: 96 },
+    { direction: 'HORIZONTAL', gap: 96, padding: 28 },
   );
 
   const features = frame(
@@ -195,7 +248,7 @@ async function build() {
         { direction: 'HORIZONTAL', gap: 24 },
       ),
     ],
-    { gap: 32, align: 'CENTER' },
+    { gap: 32, align: 'CENTER', padding: 56, fill: LIGHT, radius: 32 },
   );
 
   const testimonials = frame(
@@ -207,14 +260,12 @@ async function build() {
   );
 
   const footer = frame(
-    [text('© 2026 Petalboard', { size: 14, color: MUTED }), group([text('Privacy', { size: 14 }), text('Terms', { size: 14 })])],
-    {
-      direction: 'HORIZONTAL',
-      gap: 980,
-      align: 'CENTER',
-    },
+    [
+      text('© 2026 Petalboard', { size: 14, color: PINK }),
+      group([text('Privacy', { size: 14, color: WHITE }), text('Terms', { size: 14, color: WHITE })], 32),
+    ],
+    { direction: 'HORIZONTAL', gap: 960, align: 'CENTER', padding: 32, fill: DEEP, radius: 24 },
   );
-  footer.children[1].children[1].x = 80;
 
   const page = frame([nav, hero, logos, features, testimonials, footer], {
     padding: 80,
