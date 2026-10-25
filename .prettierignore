@@ -1,0 +1,5 @@
+node_modules
+plugin/dist
+package-lock.json
+BUILD_LOG.md
+.vscode
