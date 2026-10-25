@@ -48,10 +48,14 @@ yarn verify       # type-check, lint (ESLint + SonarJS rules) and tests
 yarn format       # Prettier
 yarn screenshots  # macOS: render every stage to plugin/screenshots/
 yarn icons        # macOS: render assets/logo.svg to PNG icons
-yarn cover        # macOS: render the Figma Community cover
+yarn listing      # macOS: render the Community cover and carousel images to plugin/assets/
 ```
 
 Load it in Figma: **Plugins → Development → Import plugin from manifest…** and choose `plugin/manifest.json`.
+
+### Playground file
+
+`plugin/tools/playground/` is a one-off helper plugin that builds a deliberately messy landing page — every layer badly named — for people to try Layer Bloom on. Import its `manifest.json` the same way, run it once in an empty Figma file, and publish that file as the Community playground.
 
 ### How it's organised
 
