@@ -1,7 +1,10 @@
 {
   "name": "layer-bloom",
   "version": "1.0.0",
-  "license": "ISC",
+  "private": true,
+  "description": "Figma plugin: turn \"Frame 58\" into names that make sense. AI suggests, you decide.",
+  "author": "Rachel Kenyani <rachelkenyani@gmail.com>",
+  "license": "MIT",
   "type": "module",
   "packageManager": "yarn@1.22.22",
   "scripts": {
