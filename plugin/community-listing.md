@@ -36,3 +36,23 @@ rename, layers, layer names, AI, cleanup, organize, naming, design systems, hand
 ## Support contact
 
 rachelkenyani@gmail.com
+
+## Images
+
+- Cover (1920×960): `plugin/assets/cover.png`
+- Carousel (1920×1080), in this order:
+  1. `plugin/assets/carousel/1-hero.png`
+  2. `plugin/assets/carousel/2-your-own-ai.png`
+  3. `plugin/assets/carousel/3-see-the-mess.png`
+  4. `plugin/assets/carousel/4-naming-style.png`
+  5. `plugin/assets/carousel/5-review.png`
+  6. `plugin/assets/carousel/6-undo-and-dark.png`
+
+Regenerate them with `yarn build && yarn listing`.
+
+## Playground file
+
+1. In Figma, create a new design file named **Layer Bloom Playground**.
+2. Plugins → Development → Import plugin from manifest → `plugin/tools/playground/manifest.json`.
+3. Run **Layer Bloom Playground Builder** once. It builds a messy landing page and a "How to try" card.
+4. Share the file (Share → Anyone with the link can view), then pick it in the "Include a playground file" step.
