@@ -125,6 +125,7 @@ function onMessage(state: State, message: MainToUi, figmaTheme: Theme): State {
     case 'error':
       return onMainError(state, message.during, message.message);
     case 'screenshots':
+    case 'screenshots-error':
       return state;
   }
 }

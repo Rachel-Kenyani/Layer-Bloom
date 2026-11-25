@@ -13,6 +13,6 @@
       "https://generativelanguage.googleapis.com",
       "https://openrouter.ai"
     ],
-    "reasoning": "Sends layer names, text and optional screenshots to the AI provider the user chooses, using the user's own API key, to suggest layer names."
+    "reasoning": "When the user requests layer-name suggestions, sends selected layer IDs, names, hierarchy, dimensions, text and optional screenshots directly to their chosen AI provider using their API key. Layer Bloom has no server."
   }
 }

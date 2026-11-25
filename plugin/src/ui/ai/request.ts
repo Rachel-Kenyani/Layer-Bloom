@@ -1,4 +1,4 @@
-type ErrorBody = { error?: { message?: string }; message?: string };
+const ALLOWED_HOSTS = new Set(['api.openai.com', 'api.anthropic.com', 'generativelanguage.googleapis.com', 'openrouter.ai']);
 
 export class ProviderError extends Error {
   readonly status: number;
@@ -30,6 +30,17 @@ export function friendlyError(status: number): string {
 }
 
 export async function postJson<T>(url: string, headers: Record<string, string>, body: unknown, signal: AbortSignal): Promise<T> {
+  const endpoint = new URL(url);
+  if (
+    endpoint.protocol !== 'https:' ||
+    endpoint.port !== '' ||
+    endpoint.username ||
+    endpoint.password ||
+    !ALLOWED_HOSTS.has(endpoint.hostname)
+  ) {
+    throw new Error('Requests must use HTTPS and an approved AI provider host.');
+  }
+
   let response: Response;
   try {
     response = await fetch(url, {
@@ -37,6 +48,7 @@ export async function postJson<T>(url: string, headers: Record<string, string>, 
       headers: { 'Content-Type': 'application/json', ...headers },
       body: JSON.stringify(body),
       signal,
+      redirect: 'error',
     });
   } catch (error) {
     if (signal.aborted) {
@@ -45,11 +57,17 @@ export async function postJson<T>(url: string, headers: Record<string, string>, 
     throw new Error("Couldn't reach the AI provider. Check your internet connection and try again.", { cause: error });
   }
 
-  const data: unknown = await response.json().catch(() => ({}));
+  let data: unknown;
+  try {
+    data = await response.json();
+  } catch (error) {
+    if (!response.ok) {
+      throw new ProviderError(`${friendlyError(response.status)} (${response.status})`, response.status);
+    }
+    throw new Error('The AI provider returned an unreadable response. Try again.', { cause: error });
+  }
   if (!response.ok) {
-    const { error, message } = data as ErrorBody;
-    const detail = error?.message ?? message ?? response.statusText;
-    throw new ProviderError(`${friendlyError(response.status)} (${response.status}: ${detail})`, response.status);
+    throw new ProviderError(`${friendlyError(response.status)} (${response.status})`, response.status);
   }
   return data as T;
 }

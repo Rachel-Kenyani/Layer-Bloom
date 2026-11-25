@@ -51,11 +51,15 @@ export const PROVIDERS: Record<Provider, ProviderInfo> = {
 };
 
 const MIN_KEY_LENGTH = 20;
+const MAX_KEY_LENGTH = 512;
 
 export function keyProblem(provider: Provider, apiKey: string): string | null {
   const { shortLabel, keyPrefix } = PROVIDERS[provider];
   if (apiKey === '') {
     return 'Paste your API key first.';
+  }
+  if (apiKey.length > MAX_KEY_LENGTH) {
+    return 'That key is unusually long. Check that you copied only the API key.';
   }
   if (/\s/.test(apiKey)) {
     return 'The key contains spaces. Copy it again without extra characters.';

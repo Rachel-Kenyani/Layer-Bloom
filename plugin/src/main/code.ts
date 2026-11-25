@@ -6,6 +6,15 @@ import { scanSelection } from './scan.ts';
 import { exportScreenshots } from './screenshots.ts';
 import { forgetSettings, loadPreferences, loadSettings, savePreferences, saveSettings } from './storage.ts';
 
+type ActiveScan = {
+  pageId: string;
+  selection: readonly SceneNode[];
+  layerIds: ReadonlySet<string>;
+};
+
+let activeScan: ActiveScan | null = null;
+let scanGeneration = 0;
+
 figma.showUI(__html__, { width: 380, height: 600, themeColors: true });
 
 function post(message: MainToUi): void {
@@ -13,10 +22,69 @@ function post(message: MainToUi): void {
 }
 
 function onSelectionChange(): void {
+  if (activeScan && activeScan.pageId !== figma.currentPage.id) {
+    activeScan = null;
+  }
   const selection = figma.currentPage.selection;
   if (!isOwnSelectionChange(selection)) {
     post({ type: 'selection', count: selection.length });
   }
+}
+
+async function scanCurrentSelection(): Promise<Awaited<ReturnType<typeof scanSelection>> | null> {
+  activeScan = null;
+  const generation = ++scanGeneration;
+  const page = figma.currentPage;
+  const selection = [...page.selection];
+  const result = await scanSelection(selection);
+  if (generation !== scanGeneration) {
+    return null;
+  }
+  const currentSelection = [...figma.currentPage.selection];
+  const selectionIsCurrent =
+    page.id === figma.currentPage.id &&
+    selection.length === currentSelection.length &&
+    selection.every((node, index) => node.id === currentSelection[index].id);
+  if (!selectionIsCurrent) {
+    throw new Error('Your selection changed while scanning. Scan it again.');
+  }
+  activeScan = {
+    pageId: page.id,
+    selection,
+    layerIds: new Set(result.layers.map(({ id }) => id)),
+  };
+  return result;
+}
+
+async function exportScannedScreenshots(requestId: string): Promise<void> {
+  const scan = activeScan;
+  if (!scan || scan.pageId !== figma.currentPage.id) {
+    throw new Error('Scan the current page again before exporting screenshots.');
+  }
+  post({ type: 'screenshots', requestId, images: await exportScreenshots(scan.selection) });
+}
+
+async function focusScannedLayer(id: string): Promise<void> {
+  if (!activeScan || activeScan.pageId !== figma.currentPage.id || !activeScan.layerIds.has(id)) {
+    figma.notify('That layer is not in the current scan. Scan the selection again.');
+    return;
+  }
+  if (!(await focusLayer(id))) {
+    figma.notify('That layer no longer exists.');
+  }
+}
+
+async function applyScannedRenames(renames: Parameters<typeof applyRenames>[0]): Promise<void> {
+  const scan = activeScan;
+  if (!scan || scan.pageId !== figma.currentPage.id) {
+    throw new Error('Scan the current page again before renaming layers.');
+  }
+  const { renamedCount, missedCount } = await applyRenames(renames, scan.layerIds);
+  if (activeScan === scan) {
+    activeScan = null;
+  }
+  figma.notify(`Renamed ${renamedCount} ${renamedCount === 1 ? 'layer' : 'layers'}. Press Cmd+Z to undo.`);
+  post({ type: 'renames-applied', renamedCount, missedCount });
 }
 
 async function handleMessage(message: UiToMain): Promise<void> {
@@ -33,11 +101,12 @@ async function handleMessage(message: UiToMain): Promise<void> {
     case 'save-settings':
       await saveSettings(message.settings);
       post({ type: 'saved-settings', settings: message.settings });
-      figma.notify('Key saved on this computer.');
+      figma.notify('Key saved in Figma plugin storage.');
       break;
 
     case 'forget-settings':
       await forgetSettings();
+      activeScan = null;
       post({ type: 'saved-settings', settings: null });
       figma.notify('Key removed.');
       break;
@@ -46,18 +115,21 @@ async function handleMessage(message: UiToMain): Promise<void> {
       await savePreferences(message.preferences);
       break;
 
-    case 'scan-selection':
-      post({ type: 'scan-result', ...(await scanSelection(figma.currentPage.selection)) });
+    case 'scan-selection': {
+      const result = await scanCurrentSelection();
+      if (result) {
+        post({ type: 'scan-result', ...result });
+      }
       break;
+    }
 
-    case 'export-screenshots':
-      post({ type: 'screenshots', images: await exportScreenshots(figma.currentPage.selection) });
+    case 'export-screenshots': {
+      await exportScannedScreenshots(message.requestId);
       break;
+    }
 
     case 'focus-layer':
-      if (!(await focusLayer(message.id))) {
-        figma.notify('That layer no longer exists.');
-      }
+      await focusScannedLayer(message.id);
       break;
 
     case 'resize':
@@ -65,9 +137,7 @@ async function handleMessage(message: UiToMain): Promise<void> {
       break;
 
     case 'apply-renames': {
-      const { renamedCount, missedCount } = await applyRenames(message.renames);
-      figma.notify(`Renamed ${renamedCount} ${renamedCount === 1 ? 'layer' : 'layers'}. Press Cmd+Z to undo.`);
-      post({ type: 'renames-applied', renamedCount, missedCount });
+      await applyScannedRenames(message.renames);
       break;
     }
   }
@@ -77,6 +147,15 @@ figma.on('selectionchange', onSelectionChange);
 figma.on('currentpagechange', onSelectionChange);
 figma.ui.onmessage = (message: UiToMain) => {
   handleMessage(message).catch((error: unknown) => {
-    post({ type: 'error', during: message.type, message: error instanceof Error ? error.message : String(error) });
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    if (message.type === 'export-screenshots') {
+      post({ type: 'screenshots-error', requestId: message.requestId, message: errorMessage });
+      return;
+    }
+    post({
+      type: 'error',
+      during: message.type,
+      message: errorMessage,
+    });
   });
 };

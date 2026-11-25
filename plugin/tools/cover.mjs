@@ -54,7 +54,7 @@ h1{font-family:Montserrat;font-weight:700;font-size:104px;line-height:1;color:#6
   <div class="logo">${logo}</div>
   <h1>Layer Bloom</h1>
   <p class="tagline">Turn <em>Frame 58</em> into names that make sense. AI suggests, you decide.</p>
-  <div class="pills"><span class="pill">OpenAI</span><span class="pill">Claude</span><span class="pill">Gemini</span><span class="pill">OpenRouter</span><span class="pill green">Free · any Figma plan</span></div>
+  <div class="pills"><span class="pill">OpenAI</span><span class="pill">Claude</span><span class="pill">Gemini</span><span class="pill">OpenRouter</span><span class="pill green">Provider fees may apply</span></div>
 </div>
 <div class="panel before"><h2>Before</h2><ul>${rows(before, false)}</ul></div>
 <div class="panel after"><h2>After</h2><ul>${rows(after, true)}</ul></div>

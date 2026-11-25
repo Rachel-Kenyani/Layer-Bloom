@@ -25,10 +25,25 @@ test('drops unknown IDs, empty, unchanged and over-long names', () => {
   assert.deepEqual(parseRenames(reply, layers), []);
 });
 
+test('keeps one suggestion per layer and bounds model-supplied reasons', () => {
+  const reply = JSON.stringify({
+    renames: [
+      { id: '1:1', newName: 'Profile Header', reason: 'r'.repeat(200) },
+      { id: '1:1', newName: 'Alternative Header', reason: 'duplicate' },
+    ],
+  });
+  assert.deepEqual(parseRenames(reply, layers), [{ id: '1:1', newName: 'Profile Header', reason: 'r'.repeat(160) }]);
+});
+
 test('treats a missing renames list as no suggestions', () => {
   assert.deepEqual(parseRenames('{"other": true}', layers), []);
 });
 
 test('explains an unreadable reply', () => {
   assert.throws(() => parseRenames('Sorry, I cannot help.', layers), /couldn't be read/);
+  assert.throws(() => parseRenames('null', layers), /couldn't be read/);
+});
+
+test('rejects oversized replies before parsing', () => {
+  assert.throws(() => parseRenames(' '.repeat(100_001), layers), /reply was too large/);
 });

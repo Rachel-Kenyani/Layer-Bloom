@@ -23,3 +23,7 @@ test('rejects empty, short and spaced keys', () => {
   assert.match(keyProblem('gemini', 'AIza123') ?? '', /too short/);
   assert.match(keyProblem('openai', 'sk-abc defghijklmnopqrstuvwxyz') ?? '', /spaces/);
 });
+
+test('rejects unusually long keys', () => {
+  assert.match(keyProblem('gemini', 'A'.repeat(513)) ?? '', /unusually long/);
+});

@@ -5,9 +5,9 @@ import { backdropCss, backdropHtml, cache, fakeClaude, fontFaces, inPlugin, logo
 const SLIDES = [
   {
     file: '2-your-own-ai',
-    eyebrow: 'Bring your own AI',
-    title: 'OpenAI, Claude, Gemini or OpenRouter',
-    body: 'Paste your own key once. It stays on your computer, and your layers go only to the AI you pick.',
+    eyebrow: 'Focused AI assistance',
+    title: 'Purpose-built for layer naming',
+    body: 'Choose OpenAI, Claude, Gemini or OpenRouter. It only suggests layer names; provider API fees may apply.',
   },
   {
     file: '3-see-the-mess',

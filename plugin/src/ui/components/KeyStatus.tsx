@@ -22,7 +22,7 @@ export function KeyStatus({ settings, onForget }: Readonly<KeyStatusProps>) {
   }
   return (
     <p class="settings-line">
-      Using {PROVIDERS[settings.provider].shortLabel} · key …{settings.apiKey.slice(-4)} ·{' '}
+      Using {PROVIDERS[settings.provider].shortLabel} · API key saved ·{' '}
       <LinkButton onClick={() => setConfirming(true)}>Change key</LinkButton>
     </p>
   );

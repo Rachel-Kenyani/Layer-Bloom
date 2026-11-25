@@ -16,6 +16,8 @@ const STYLE_OPTIONS = (Object.keys(NAMING_STYLES) as NamingStyle[]).map((value) 
 type ScannedProps = {
   scan: ScanResult;
   error: string | null;
+  providerName: string;
+  selectionChanged: boolean;
   namingStyle: NamingStyle;
   onNamingStyleChange: (style: NamingStyle) => void;
   includeScreenshots: boolean;
@@ -29,6 +31,8 @@ export function Scanned(props: Readonly<ScannedProps>) {
   const {
     scan,
     error,
+    providerName,
+    selectionChanged,
     namingStyle,
     onNamingStyleChange,
     includeScreenshots,
@@ -68,8 +72,24 @@ export function Scanned(props: Readonly<ScannedProps>) {
           </>
         }
       />
+      <Banner tone="info">
+        Clicking Suggest names with AI sends selected layer IDs, names, types, hierarchy, sizes and layout details, plus up to 120
+        characters of each text layer, directly to {providerName}. If enabled, up to three selected-node screenshots (longest edge capped at
+        512 pixels) are sent too. Large scans may make several provider requests. Provider fees and data-retention terms may apply. Layer
+        Bloom has no server and does not receive this data.{' '}
+        <a
+          class="privacy-link"
+          href="https://github.com/Rachel-Kenyani/Layer-Bloom/blob/main/plugin/privacy-policy.md"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Privacy policy
+        </a>
+      </Banner>
       <div>
-        <Button onClick={onSuggest}>Suggest names with AI</Button>
+        <Button onClick={onSuggest} disabled={selectionChanged}>
+          Suggest names with AI
+        </Button>
         <Button variant="secondary" onClick={onRescan}>
           Scan again
         </Button>

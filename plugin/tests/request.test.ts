@@ -13,20 +13,59 @@ test('turns status codes into plain advice', () => {
   assert.match(friendlyError(418), /returned an error/);
 });
 
-test('includes the provider detail in errors', async (context) => {
+test('does not expose raw provider error details', async (context) => {
   context.mock.method(
     globalThis,
     'fetch',
-    async () => new Response(JSON.stringify({ error: { message: 'Incorrect API key' } }), { status: 401 }),
+    async () => new Response(JSON.stringify({ error: { message: 'Incorrect API key: private detail' } }), { status: 401 }),
   );
-  await assert.rejects(postJson('https://example.test', {}, {}, new AbortController().signal), /rejected.*401: Incorrect API key/);
+  await assert.rejects(
+    postJson('https://api.openai.com/v1/chat/completions', {}, {}, new AbortController().signal),
+    (error: unknown) => error instanceof Error && /rejected.*401/.test(error.message) && !error.message.includes('private detail'),
+  );
+});
+
+test('blocks requests to hosts outside the provider allowlist', async (context) => {
+  let fetchCalled = false;
+  context.mock.method(globalThis, 'fetch', async () => {
+    fetchCalled = true;
+    return new Response('{}');
+  });
+  await assert.rejects(
+    postJson('https://api.openai.com.attacker.test/v1/chat/completions', {}, {}, new AbortController().signal),
+    /approved AI provider host/,
+  );
+  assert.equal(fetchCalled, false);
+});
+
+test('rejects custom ports on provider hosts', async (context) => {
+  let fetchCalled = false;
+  context.mock.method(globalThis, 'fetch', async () => {
+    fetchCalled = true;
+    return new Response('{}');
+  });
+  await assert.rejects(
+    postJson('https://api.openai.com:8443/v1/chat/completions', {}, {}, new AbortController().signal),
+    /approved AI provider host/,
+  );
+  assert.equal(fetchCalled, false);
+});
+
+test('prevents redirects from provider endpoints', async (context) => {
+  let redirect: RequestRedirect | undefined;
+  context.mock.method(globalThis, 'fetch', async (_input: RequestInfo | URL, init?: RequestInit) => {
+    redirect = init?.redirect;
+    return new Response('{}');
+  });
+  await postJson('https://api.openai.com/v1/chat/completions', {}, {}, new AbortController().signal);
+  assert.equal(redirect, 'error');
 });
 
 test('explains network failures', async (context) => {
   context.mock.method(globalThis, 'fetch', async () => {
     throw new TypeError('Failed to fetch');
   });
-  await assert.rejects(postJson('https://example.test', {}, {}, new AbortController().signal), /internet connection/);
+  await assert.rejects(postJson('https://api.openai.com/v1/chat/completions', {}, {}, new AbortController().signal), /internet connection/);
 });
 
 test('passes cancellation through unchanged', async (context) => {
@@ -35,5 +74,5 @@ test('passes cancellation through unchanged', async (context) => {
   context.mock.method(globalThis, 'fetch', async () => {
     throw new DOMException('Aborted', 'AbortError');
   });
-  await assert.rejects(postJson('https://example.test', {}, {}, controller.signal), { name: 'AbortError' });
+  await assert.rejects(postJson('https://api.openai.com/v1/chat/completions', {}, {}, controller.signal), { name: 'AbortError' });
 });

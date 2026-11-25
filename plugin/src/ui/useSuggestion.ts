@@ -29,7 +29,7 @@ export function useSuggestion(state: State, dispatch: Dispatch<Action>) {
     });
 
     try {
-      const images = state.includeScreenshots ? await requestScreenshots() : [];
+      const images = state.includeScreenshots ? await requestScreenshots(controller.signal) : [];
       const suggestions = await suggestNames({
         settings,
         namingStyle: state.namingStyle,
@@ -61,7 +61,7 @@ export function useSuggestion(state: State, dispatch: Dispatch<Action>) {
 
   function start() {
     const { settings, view } = state;
-    if (settings && view.stage === 'scanned') {
+    if (!request.current && settings && view.stage === 'scanned') {
       run(settings, view.scan).catch((error: unknown) => dispatch({ type: 'ai-failed', error: String(error) }));
     }
   }

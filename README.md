@@ -6,30 +6,29 @@ A Figma plugin that renames messy layers — `Frame 58`, `Group 12`, `Screenshot
 
 ## Features
 
-- **Bring your own key** — OpenAI, Anthropic (Claude), Google Gemini or OpenRouter.
+- **Focused AI layer naming** — OpenAI, Anthropic (Claude), Google Gemini or OpenRouter; this is not a general-purpose AI chat tool.
 - **Review before anything changes** — tick, untick or edit each suggestion. Click a layer name to jump to it in Figma.
 - **Naming styles** — Title Case (`Job Entry – PixelEdge`), slash paths (`Card/Job/PixelEdge`) or kebab-case (`job-entry-pixeledge`).
 - **Optional screenshots** — lets the AI recognise icons, images and cards that have no text.
 - **One undo step** for every batch of renames.
 - **Safe with components** — instances are named after their component and never edited inside, so no overrides are created.
-- Works on every Figma plan.
 - Light and dark mode.
 
 ## Privacy
 
-- Your API key is stored with `figma.clientStorage`, **only on your computer**. It is never sent to the plugin author.
-- When you ask for suggestions, these go **directly to the AI provider you chose**, and nowhere else:
-  - layer names, types, sizes and nesting
-  - the first 120 characters of text layers
-  - screenshots of the selection, **only if you tick "Also send screenshots"**
+- Scanning is local. Nothing is sent to an AI provider until you click **Suggest names with AI**.
+- Your API key is stored with Figma's `clientStorage` and sent directly to your chosen provider for requests. It is not sent to the plugin author.
+- Suggestion requests send selected layer IDs, names, types, sizes, hierarchy, layout and component details, plus up to 120 characters of each text layer.
+- If you enable **Also send screenshots**, up to three selected nodes are sent as screenshots, with the longest edge capped at 512 pixels.
+- Layer Bloom has no server and does not receive layer data or API keys. Your selected provider processes requests under its own privacy and retention terms, and may charge for API usage.
 - The plugin's manifest only allows network access to the four AI providers. Figma blocks every other address.
 - Fonts and icons are bundled into the plugin; nothing else is loaded from the internet.
 
-Your provider's own data policy applies to what you send them. Use a dedicated API key with a monthly spending limit.
+Read the [Layer Bloom Privacy Policy](plugin/privacy-policy.md). Use a dedicated API key with a monthly spending limit.
 
 ## Using it
 
-1. Run the plugin, choose a provider and paste your API key ([OpenAI](https://platform.openai.com/api-keys), [Anthropic](https://console.anthropic.com/settings/keys), [Gemini](https://aistudio.google.com/apikey), [OpenRouter](https://openrouter.ai/keys)).
+1. Run the plugin, choose a provider and paste your API key ([OpenAI](https://platform.openai.com/api-keys), [Anthropic](https://console.anthropic.com/settings/keys), [Gemini](https://aistudio.google.com/apikey), [OpenRouter](https://openrouter.ai/keys)). Provider API usage may be billed separately.
 2. Select frames or groups and click **Scan selected layers**.
 3. Pick a naming style and click **Suggest names with AI**.
 4. Review, then **Rename**. Press Cmd+Z (Ctrl+Z on Windows) to undo.

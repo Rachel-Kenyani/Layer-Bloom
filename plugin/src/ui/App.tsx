@@ -17,6 +17,7 @@ import { Working } from './stages/Working.tsx';
 import { hasScanResults, initialState, isIdle, reducer, type State } from './state.ts';
 import type { Action } from './state.ts';
 import { useSuggestion } from './useSuggestion.ts';
+import { PROVIDERS } from './providers.ts';
 
 function figmaTheme(): Theme {
   return document.documentElement.classList.contains('figma-dark') ? 'dark' : 'light';
@@ -42,10 +43,15 @@ function StageView({ state, dispatch }: Readonly<{ state: State; dispatch: (acti
     case 'ready':
       return <Ready selectionCount={state.selectionCount} emptyScanMessage={view.message} onScan={scanSelection} />;
     case 'scanned':
+      if (!state.settings) {
+        return <Setup onSave={(settings) => send({ type: 'save-settings', settings })} />;
+      }
       return (
         <Scanned
           scan={view.scan}
           error={view.error}
+          providerName={PROVIDERS[state.settings.provider].shortLabel}
+          selectionChanged={state.selectionChanged}
           namingStyle={state.namingStyle}
           onNamingStyleChange={(namingStyle: NamingStyle) => {
             dispatch({ type: 'naming-style-changed', namingStyle });

@@ -32,7 +32,7 @@ export type UiToMain =
   | { type: 'forget-settings' }
   | { type: 'save-preferences'; preferences: Partial<Preferences> }
   | { type: 'scan-selection' }
-  | { type: 'export-screenshots' }
+  | { type: 'export-screenshots'; requestId: string }
   | { type: 'focus-layer'; id: string }
   | { type: 'resize'; width: number; height: number }
   | { type: 'apply-renames'; renames: ApprovedRename[] };
@@ -42,6 +42,7 @@ export type MainToUi =
   | { type: 'saved-settings'; settings: AiSettings | null }
   | { type: 'selection'; count: number }
   | ({ type: 'scan-result' } & ScanResult)
-  | { type: 'screenshots'; images: string[] }
+  | { type: 'screenshots'; requestId: string; images: string[] }
+  | { type: 'screenshots-error'; requestId: string; message: string }
   | { type: 'renames-applied'; renamedCount: number; missedCount: number }
   | { type: 'error'; during: UiToMain['type']; message: string };
